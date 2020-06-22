@@ -1,0 +1,42 @@
+/* 
+TODO: Grid-layout may have been another way to achieve this, but I didn't want to have to specify 
+ever cells expected location here, wanted to float to the expected place atuomatically...
+*/
+.sudoku {
+    margin: 20px;
+    display: flex;
+}
+.sudoku-board {
+    flex-direction: column;
+    border: 1px solid #000;
+    /* Margin -1px on the box eats up the top + right borders, adding px back for wrapper */
+    padding-top: 1px;
+    padding-right: 1px;
+}
+.sudoku-grid-line {
+    flex-direction: row;
+}
+.sudoku-box {
+    border: 1px solid #000;
+    flex-direction: column;
+    float: left;
+    margin-right: -1px;
+    margin-top: -1px;
+}
+.sudoku-box-line {
+    flex-direction: row;
+}
+.sudoku-square {
+    background: #fff;
+    border: 1px solid #000;
+    float: left;
+    font-size: 24px;
+    font-weight: bold;
+    line-height: 34px;
+    height: 34px;
+    margin-right: -1px;
+    margin-top: -1px;
+    padding: 0;
+    text-align: center;
+    width: 34px; 
+}

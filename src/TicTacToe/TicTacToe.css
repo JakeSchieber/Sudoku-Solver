@@ -1,0 +1,49 @@
+.ttt {
+  font: 14px "Century Gothic", Futura, sans-serif;
+  margin: 20px;
+  display: flex;
+  flex-direction: row;
+}
+
+.ttt-info {
+  margin-left: 20px;
+}
+
+.square {
+  background: #fff;
+  border: 1px solid #999;
+  float: left;
+  font-size: 24px;
+  font-weight: bold;
+  line-height: 34px;
+  height: 34px;
+  margin-right: -1px;
+  margin-top: -1px;
+  padding: 0;
+  text-align: center;
+  width: 34px;
+}
+
+/* Each square is a button, set outline to none so that it isn't highlighted after click */
+.square:focus {
+  outline: none;
+}
+
+.square:hover {
+  background: #ddd;
+}
+
+.square-winner {
+  border: 2px solid #00FF00;
+}
+
+ol, ul {
+  padding-left: 30px;
+}
+.selected-move {
+  font-weight: bold;
+}
+
+.matchFailureStatus {
+  color: #FF0000;
+}
