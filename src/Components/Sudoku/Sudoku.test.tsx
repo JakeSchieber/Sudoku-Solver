@@ -242,4 +242,18 @@ describe('Sudoku', () => {
             expect(() => {sudoku.getIndexOfSquareInLocalBox(0, 9)}).toThrowError();
         });
     });
+
+    describe('Get global square index of square inside box', () => {
+        let sudoku = new Sudoku(GOOD_SUDOKU_GRID);
+        test('Returns expected values', () => {
+            expect(sudoku.getGlobalIndexOfBoxSquare(0,0)).toEqual(0);
+            expect(sudoku.getGlobalIndexOfBoxSquare(8,8)).toEqual(80);
+        });
+        test('Throws expected errors', () => {
+            expect(() => {sudoku.getGlobalIndexOfBoxSquare(-1, 0)}).toThrowError();
+            expect(() => {sudoku.getGlobalIndexOfBoxSquare(9, 0)}).toThrowError();
+            expect(() => {sudoku.getGlobalIndexOfBoxSquare(0, -1)}).toThrowError();
+            expect(() => {sudoku.getGlobalIndexOfBoxSquare(0, 9)}).toThrowError();
+        });
+    })
 });

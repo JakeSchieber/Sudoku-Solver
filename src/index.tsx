@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import { SudokuUI } from './Components/Sudoku';
-import { TicTacToe } from './TicTacToe/TicTacToe';
+import { SudokuUI } from './Components/Sudoku/Sudoku';
+import { TicTacToe } from './Components/TicTacToe/TicTacToe';
 import * as serviceWorker from './serviceWorker';
 
 ReactDOM.render(
