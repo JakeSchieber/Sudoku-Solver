@@ -215,7 +215,7 @@ export class Sudoku {
            } 
         }
         // If full then Sudoku is solved when it has no conflicts
-        return this.hasConflicts();
+        return !this.hasConflicts();
     }
 
     /**

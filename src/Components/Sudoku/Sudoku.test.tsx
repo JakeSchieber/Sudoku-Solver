@@ -30,6 +30,26 @@ const BAD_SUDOKU_GRID: SudokuSection = [
     null, null, 9, null, null, null, 2, 8, null,
 ];
 
+/**
+ * Generation logic
+ * Line 1: 1->9
+ * Line 2: Circular shift line 1 by 3 (ex: bringing 4-6 into box 0, 1-3 into box 2)
+ * Line 3: Circular shift line 2 by 3 for same effect as above
+ * Line 4->6: Copy of line 1-3 but circular shift each line by 1 (ex: box 0 has 1 in column 0, box 3 will put 1 in column 2)
+ * Line 7-9: Copy of line 4->6 but circular shift each line by 1 for same effect as above
+ */
+const GOMPLETED_SUDOKU_GRID: SudokuSection = [
+    1, 2, 3, 4, 5, 6, 7, 8, 9,
+    4, 5, 6, 7, 8, 9, 1, 2, 3,
+    7, 8, 9, 1, 2, 3, 4, 5, 6,
+    9, 1, 2, 3, 4, 5, 6, 7, 8,
+    3, 4, 5, 6, 7, 8, 9, 1, 2,
+    6, 7, 8, 9, 1, 2, 3, 4, 5,
+    8, 9, 1, 2, 3, 4, 5, 6, 7,
+    2, 3, 4, 5, 6, 7, 8, 9, 1,
+    5, 6, 7, 8, 9, 1, 2, 3, 4,
+];
+
 describe('Sudoku', () => {
     // TODO Create test for instantiation
     describe('Instantiation', () => {
@@ -86,6 +106,30 @@ describe('Sudoku', () => {
             badSudoku[6*9 + 6] = 1; // 0th colmn of middle box
             badSudoku[8*9 + 8] = 1; // last index of middle box
             expect(new Sudoku(badSudoku).hasConflicts()).toBe(true);
+        });
+    });
+    describe('Is solved', () => {
+        test('Detects completed', () => {
+            let sudoku = new Sudoku(GOMPLETED_SUDOKU_GRID);
+            expect(sudoku.hasConflicts()).toBe(false);
+            expect(sudoku.isSolved()).toBe(true);
+        });
+
+        test('Detects incomplete', () => {
+            let notFullData_1 = GOMPLETED_SUDOKU_GRID.slice();
+            notFullData_1[0] = null;
+            expect(new Sudoku(notFullData_1).isSolved()).toBe(false);
+
+            let notFullData_2 = GOMPLETED_SUDOKU_GRID.slice();
+            notFullData_2[80] = null;
+            expect(new Sudoku(notFullData_2).isSolved()).toBe(false);
+        });
+
+        test('Detects incorrect', () => {
+            // Test complete sudoku has 1 at index 1, setting to 9 to force conflict
+            let incorrect = GOMPLETED_SUDOKU_GRID.slice();
+            incorrect[0] = 9;
+            expect(new Sudoku(incorrect).isSolved()).toBe(false);
         });
     });
     describe('Row contains', () => {

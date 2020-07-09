@@ -1,0 +1,7 @@
+#Figure out why SSH key login isn't working
+C:\Users\Jacob\.ssh
+C:\ProgramData\ssh
+https://www.concurrency.com/blog/may-2019/key-based-authentication-for-openssh-on-windows
+https://serverpilot.io/docs/how-to-use-ssh-public-key-authentication/
+https://code.visualstudio.com/docs/remote/ssh
+https://code.visualstudio.com/docs/remote/troubleshooting#_configuring-key-based-authentication
