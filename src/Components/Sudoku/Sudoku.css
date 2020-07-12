@@ -6,6 +6,9 @@ ever cells expected location here, wanted to float to the expected place atuomat
     margin: 20px;
     display: flex;
 }
+.sudoku-status {
+    margin: 20px;
+}
 .sudoku-board {
     flex-direction: column;
     border: 1px solid #000;
@@ -30,13 +33,19 @@ ever cells expected location here, wanted to float to the expected place atuomat
     background: #fff;
     border: 1px solid #000;
     float: left;
-    font-size: 24px;
-    font-weight: bold;
     line-height: 34px;
     height: 34px;
+    width: 34px; 
     margin-right: -1px;
     margin-top: -1px;
     padding: 0;
     text-align: center;
-    width: 34px; 
+    font: 24px Arial;
+    color: black;
+}
+.provided-square-location {
+    font-weight: bold;
+}
+.conflict-square {
+    color: red;
 }

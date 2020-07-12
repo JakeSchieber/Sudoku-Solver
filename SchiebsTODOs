@@ -5,3 +5,20 @@ https://www.concurrency.com/blog/may-2019/key-based-authentication-for-openssh-o
 https://serverpilot.io/docs/how-to-use-ssh-public-key-authentication/
 https://code.visualstudio.com/docs/remote/ssh
 https://code.visualstudio.com/docs/remote/troubleshooting#_configuring-key-based-authentication
+
+
+Where are we? lol
+
+"setSquare" seems to be the major point that we dropped off at
+
+IsSolved
+Check whether additional input breaks - if so pass what is wrong and reflect in UI - special behavior for "known" vs "added"
+
+Handle input function needs an updated react callback (pass function pointer instead)
+
+
+
+WHERE DID I LEAVE OFF?
+Conflict locations is broken + input sanitization
+Conflict locations is attempting to use global index but square key is indexing on local box index, provided locations relies on local location
+TODO is to figure out whether the global or local index was a better idea and then get both using it accordingly.
