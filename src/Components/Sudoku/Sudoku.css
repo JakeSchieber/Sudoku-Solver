@@ -49,3 +49,19 @@ ever cells expected location here, wanted to float to the expected place atuomat
 .conflict-square {
     color: red;
 }
+.sudoku-square-possibilities {
+    table-layout:fixed;
+}
+.sudoku-square-possibilities td {
+    font: 14px Arial;
+    line-height: 16px;
+    width: 16px;
+    height: 16px;
+}
+/* TODO: look into the tables applied "border-spacing" */
+.provided-possibilities {
+    width: 62px;
+    height: 62px;
+    font-size: 30px;
+    line-height: 30px;
+}

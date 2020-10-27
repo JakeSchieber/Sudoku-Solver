@@ -1,29 +1,7 @@
-import * as React from 'react';
-import './Sudoku.css';
-import * as SampleSudokus from './SampleSudokus';
-
 // Individual Sudoku square, number if filled, null if not
-export type SudokuSquare = number | null;
+export type SudokuSquareValue = number | null;
 // Either an entire Sudoku grid or a subsection like a Sudoke line, column or box including 9 squares
-export type SudokuSection = Array<SudokuSquare>;
-
-// Sudoku UI, uses Sudoku class for all logic and to pull in it's state/props
-export interface SudokuUIState {
-    sudoku: Sudoku;
-}
-export interface SudokuBoxProps {
-    squares: SudokuSection;
-    rootSize: number;
-    providedLocations: Array<number>;
-    conflictLocations: Array<number>;
-    handleInput: (boxSquareIndex: number, val: string) => void; 
-}
-export interface SudokuSquareProps {
-    value: SudokuSquare;
-    isProvidedLocation: boolean;
-    isConflictLocation: boolean;
-    onInput: (val: string) => void; // callback it can pass value to
-}
+export type SudokuSection = Array<SudokuSquareValue>;
 
 // TODO: these should be removed when future support for non-9x9 sudokus are supported which may have unique base + root row/column dimensions
 // Core size dimension (usually 9), specifies number of rows, columns, boxes + the number of items inside each.
@@ -31,10 +9,6 @@ export const SUDOKU_BASE_SIZE = 9;
 // Root dimension (3 for 9x9 sudoku), which specifies the X by X dimension of each box + # of contributions that each box has global grid lines/columns
 export const SUDOKU_ROOT_SIZE = Math.sqrt(SUDOKU_BASE_SIZE);
 export const SUDOKU_NUM_SQUARES = SUDOKU_BASE_SIZE * SUDOKU_BASE_SIZE;
-
-/**
- * TODO: add a wrapping "SudokuGame" class which manages UI of users inputting, configuring and switching between different puzzles
- */
 
 /**
  * Sudoku class, includes all logic required to describe, understand and interact with a Sudoku puzzle.
@@ -66,6 +40,12 @@ export class Sudoku {
         // If "providedLocations" is null then we calculate based on the grid locations passed in.
         // If "providedLocations" is non-null then it means "grid" includes some partially-filled user-entries
         if(providedLocations !== undefined) {
+            // Validate that all specified providedLocations have some value
+            for(let i=0; i<providedLocations.length; i++) {
+                if(this.grid[providedLocations[i]] === null) {
+                    throw new Error(`Value at provided index location cannot be null: ${providedLocations[i]}`)
+                }
+            }
             this.providedLocations = providedLocations;
         } else {
             this.providedLocations = [];
@@ -83,12 +63,16 @@ export class Sudoku {
          */
     }
 
+    get gridSize() {
+        return this.grid.length;
+    }
+
     /**
      * Returns the value of the square at the specified global square index
      * @param globalSquareIndex global grid index of desired square
      * @returns current value at the specified location
      */
-    getSquareAtGlobalGridIndex(globalSquareIndex: number): SudokuSquare {
+    getSquare(globalSquareIndex: number): SudokuSquareValue {
         if(globalSquareIndex < 0 || globalSquareIndex >= this.grid.length) {
             throw new Error(`Invalid globalSquareIndex specified: (${globalSquareIndex}), must be equal to or between 0 and (${this.grid.length - 1})`);
         }
@@ -96,66 +80,129 @@ export class Sudoku {
     }
 
     /**
-     * Returns the value of the square at the specified global row and column index
-     * @param row global grid row of desired square
-     * @param column global grid column of desired square
-     * @returns current value at the specified location
+     * Returns an enriched set of details about the square at the specified global square index
+     * @param row global row square is located in
+     * @param col global col square is located in
+     * @returns boxIndex + localSquareIndexInBox of request square
      */
-    getSquareAtGlobalColAndRow(row: number, column: number): SudokuSquare {
-        if(row < 0 || row >= this.baseSize || column < 0 || column >= this.baseSize) {
-            throw new Error(`Invalid row/column index: (${row}, ${column})`);
+    getEnrichedSquareDetails(globalSquareIndex: number) {
+        // Get details, helper functions also validate index location
+        const value = this.getSquare(globalSquareIndex)
+        const location = this.getRowAndColumnFromGlobalIndex(globalSquareIndex);
+        
+        // Determine what box index that the square is inside
+        const boxRow = Math.floor(location.row / this.rootSize);
+        const boxCol = Math.floor(location.col / this.rootSize);
+        const boxIndex = boxRow * this.rootSize + boxCol;
+
+        // Determine what the squares index is inside the local box
+        let localBoxRow = location.row % this.rootSize;
+        let localboxCol = location.col % this.rootSize;
+        const localSquareIndexInBox =  localBoxRow * this.rootSize + localboxCol;
+
+        return {
+            value: value,
+            row: location.row,
+            col: location.col,
+            boxIndex: boxIndex,
+            localSquareIndexInBox: localSquareIndexInBox,
         }
-        return this.getSquareAtGlobalGridIndex((row * this.baseSize) + column);
     }
 
     /**
      * Returns values from the requested row of the sudoku grid
-     * @param row global grid index of the row to return
-     * @return array of entries from the requested row 
+     * @param row global row index to return
+     * @returns array of entries from the requested row 
      */
     getRow(row: number): SudokuSection {
-        if(row < 0 || row >= this.baseSize) {
-            throw new Error(`Invalid row index: ${row}`);
-        }
-        const startIndex = row * this.baseSize;
-        return this.grid.slice(startIndex, startIndex + this.baseSize);
+       return this.getSudokuSection(this.getGlobalIndexesInRow(row));
     }
-    
+
     /**
      * Returns values from the requested column of the sudoku grid
-     * @param column global grid index of the column to return
-     * @return array of entries from the requested column 
+     * @param column global column index to return
+     * @returns array of entries from the requested column 
      */
     getColumn(column: number): SudokuSection {
-        if(column < 0 || column >= this.baseSize) {
-            throw new Error(`Invalid column index: ${column}`);
-        }
-        let ret: SudokuSection = [];
-        for(let row=0; row<this.baseSize; row++){
-            ret.push(this.grid[row * this.baseSize + column]);
-        }
-        return ret;
+        return this.getSudokuSection(this.getGlobalIndexesInColumn(column));
     }
 
     /**
      * Returns values from the requested box of the sudoku grid
-     * @param box global grid index of the box to return
-     * @return array of entries from the requested column 
+     * @param box global box index to return
+     * @returns array of entries from the requested column 
      */
     getBox(box: number): SudokuSection {
+        return this.getSudokuSection(this.getGlobalIndexesInBox(box));
+    }
+
+    /**
+     * Returns values at the specified global indexes in the sudoku
+     * @param indexes global indexes to pull
+     * @returns corresponding values at index
+     */
+    getSudokuSection(indexes: Array<number>) {
+        let squares = [];
+        for(let i=0; i<indexes.length; i++) {
+            squares.push(this.getSquare(indexes[i]));
+        }
+        return squares;
+    }
+
+    /**
+     * Calculates the gloabl indexes contained in the specified row
+     * @param row global row index to return
+     * @returns corresponding global index locations
+     */
+    getGlobalIndexesInRow(row: number) {
+        if(row < 0 || row >= this.baseSize) {
+            throw new Error(`Invalid row index: ${row}`);
+        }
+        let indexes = [];
+        for(let col=0; col<this.baseSize; col++) {
+            indexes.push(row * this.baseSize + col);
+        }
+        return indexes;
+    }
+
+    /**
+     * Calculates the gloabl indexes contained in the specified column
+     * @param column global column index to return
+     * @returns corresponding global index locations
+     */
+    getGlobalIndexesInColumn(column: number) {
+        if(column < 0 || column >= this.baseSize) {
+            throw new Error(`Invalid column index: ${column}`);
+        }
+        let indexes = [];
+        for(let row=0; row<this.baseSize; row++){
+            indexes.push(row * this.baseSize + column);
+        }
+        return indexes;
+    }
+
+    /**
+     * Calculates the gloabl indexes contained in the specified box
+     * @param box global box index to return
+     * @returns corresponding global index locations
+     */
+    getGlobalIndexesInBox(box: number) {
         if(box < 0 || box >= this.baseSize) {
             throw new Error(`Invalid box index: ${box}`);
         }
         // Determine what grid row + column that the box is in and determine indexes in grid
         const boxRowStart = Math.floor(box / this.rootSize) * this.rootSize;
         const boxColumnStart = (box % this.rootSize) * this.rootSize;
-        // Loop through each row in the box and add all values to return
-        let ret: SudokuSection = [];
+        // Loop through each row in the box 
+        let indexes = [];
         for(let row=0; row<this.rootSize; row++) {
-            const lineStartIndex = (boxRowStart + row) * this.baseSize + boxColumnStart;
-            ret.push(...this.grid.slice(lineStartIndex, lineStartIndex + this.rootSize));
+            // Loop through each column in the box and add all values to return
+            const startIndex = (boxRowStart + row) * this.baseSize + boxColumnStart;
+            for(let col=0; col<this.rootSize; col++) {
+                indexes.push(startIndex + col);
+            }
         }
-        return ret;
+        return indexes;
     }
 
     /**
@@ -214,30 +261,32 @@ export class Sudoku {
     }
 
     /**
-     * Returns what box and local box inside that a square is located in based on its global row and column location
-     * @param row global row square is located in
-     * @param col global col square is located in
-     * @returns boxIndex + localSquareIndexInBox of request square
+     * Returns the grid row and column of a global grid index
+     * @param globalSquareIndex request square's global index
+     * @returns what grid row + column the square is located in
      */
-    getEnrichedSquareDetails(row: number, col: number) {
-        if(row < 0 || row >= this.baseSize || col < 0 || col >= this.baseSize) {
-            throw new Error(`Invalid row/column index: (${row}, ${col})`);
+    getRowAndColumnFromGlobalIndex(globalSquareIndex: number) {
+        // Validate whether provided index is in range of grid
+        if(globalSquareIndex < 0 || globalSquareIndex >= this.baseSize * this.baseSize) {
+            throw new Error(`Invalid globalSquareIndex index: ${globalSquareIndex}`);
         }
-        // Determine what box index that the square is inside
-        const boxRow = Math.floor(row / this.rootSize);
-        const boxCol = Math.floor(col / this.rootSize);
-        const boxIndex = boxRow * this.rootSize + boxCol;
-
-        // Determine what the squares index is inside the local box
-        let localBoxRow = row % this.rootSize;
-        let localboxCol = col % this.rootSize;
-        const localSquareIndexInBox =  localBoxRow * this.rootSize + localboxCol;
-
         return {
-            value: this.getSquareAtGlobalColAndRow(row, col),
-            boxIndex: boxIndex,
-            localSquareIndexInBox: localSquareIndexInBox,
+            row: Math.floor(globalSquareIndex / this.baseSize),
+            col: globalSquareIndex % this.baseSize,
         }
+    }
+
+    /**
+     * Returns the globalIndex corresponding to the provided row and column locations
+     * @param row square's row index location
+     * @param col square's column index location
+     * @returns corresponding globalIndex
+     */
+    getGlobalIndexFromRowAndColumn(row: number, col: number) {
+        if(row < 0 || row >= this.baseSize || col < 0 || col >= this.baseSize) {
+            throw new Error(`Invalid row/col index: (${row}, ${col}), expected (0,0)->(${this.baseSize}, ${this.baseSize})`);
+        }
+        return this.baseSize * row + col;
     }
 
     /**
@@ -263,22 +312,6 @@ export class Sudoku {
     }
 
     /**
-     * Returns the grid row and column of a global grid index
-     * @param globalSquareIndex request square's global index
-     * @returns what grid row + column the square is located in
-     */
-    getRowAndColumnFromGlobalIndex(globalSquareIndex: number) {
-        // Validate whether provided index is in range of grid
-        if(globalSquareIndex < 0 || globalSquareIndex >= this.baseSize * this.baseSize) {
-            throw new Error(`Invalid globalSquareIndex index: ${globalSquareIndex}`);
-        }
-        return {
-            row: Math.floor(globalSquareIndex / this.baseSize),
-            col: globalSquareIndex % this.baseSize,
-        }
-    }
-
-    /**
      * Returns whether current grid has any conflicts
      */
     hasConflicts(): boolean {
@@ -293,7 +326,8 @@ export class Sudoku {
         // Loop through each index inside of our grid, we loop based on row + col to help create method params
         for(let row=0; row<this.baseSize; row++) {
             for(let col=0; col<this.baseSize; col++) {
-                let squareDetails = this.getEnrichedSquareDetails(row, col);
+                const globalIndex = this.getGlobalIndexFromRowAndColumn(row, col);
+                let squareDetails = this.getEnrichedSquareDetails(globalIndex);
                 // Don't check null values
                 if(squareDetails.value === null) {
                     continue;
@@ -317,11 +351,9 @@ export class Sudoku {
      * @param excludeColumn optional local column index to ignore (ex: checking whether some square is in conflict with another entry)
      */
     rowContains(row: number, val: number, excludeColumn?: number): boolean {
-        if(row < 0 || row >= this.baseSize) {
-            throw new Error(`Invalid row index: ${row}`);
-        }
+        const rowValues = this.getRow(row);
         for(let column=0; column<this.baseSize; column++) {
-            if(column !== excludeColumn && this.getSquareAtGlobalColAndRow(row,column) === val) {
+            if(column !== excludeColumn && rowValues[column] === val) {
                 return true;
             }
         }
@@ -335,11 +367,9 @@ export class Sudoku {
      * @param excludeRow optional local row index to ignore (ex: checking whether some square is in conflict with another entry)
      */
     columnContains(column: number, val: number, excludeRow?: number): boolean {
-        if(column < 0 || column >= this.baseSize) {
-            throw new Error(`Invalid column index: ${column}`);
-        }
+        const colValues = this.getColumn(column);
         for(let row=0; row<this.baseSize; row++) {
-            if(row !== excludeRow && this.getSquareAtGlobalColAndRow(row,column) === val) {
+            if(row !== excludeRow && colValues[row] === val) {
                 return true;
             }
         }
@@ -370,7 +400,7 @@ export class Sudoku {
      * @param val value to set grid index to
      * @returns "this", allows caller to update its local state to the latest sudoku as needed
      */
-    setSquare(gridIndex: number, val: SudokuSquare) {
+    setSquare(gridIndex: number, val: SudokuSquareValue) {
         if(this.providedLocations.includes(gridIndex)) {
             throw new Error("Cannot change a provided grid location");
         }
@@ -391,10 +421,25 @@ export class Sudoku {
     /**
      * Solves the current sudoku
      */
-    solve(): SudokuSection {
+    solve() {
         // TODO, start with basic recursion/backtracking solver
-        throw new Error('Not implemented');
-        return SampleSudokus.EMPTY_SUDOKU;        
+
+        // Debug: attempt to solve the sudoku
+        // TODO: move to the solve function
+        let possibilites = this.getPossibilities();
+        console.log("solve");
+        console.log(possibilites);
+        //while(possibilites.solvableSquares.length > 0) {
+            for(let i=0; i<possibilites.solvableSquares.length; i++) {
+                const square = possibilites.solvableSquares[i];
+                this.setSquare(square.gridIndex, square.value);
+            }
+            possibilites = this.getPossibilities();
+            console.log(possibilites);
+        //}
+
+        // return the current updated sudoku so React can update its state
+        return this;     
     }
 
     /**
@@ -410,215 +455,91 @@ export class Sudoku {
         // If full then Sudoku is solved when it has no conflicts
         return !this.hasConflicts();
     }
-}
 
-/**
- * SudokuUI class.  Enables a representation of a Sudoku board and allows for users to make entries.
- * UI includes differentiation between "provided" vs "user submitted" square values and lights up
- * conflicting squares if user's make conflicting entries.
- * 
- * State is based on a "Sudoku" class which this class wraps and which contains all sudoku game + board logic.
- */
-export class SudokuUI extends React.Component<{}, SudokuUIState> {
-    constructor(props: {}) {
-        super(props);
-        // TODO: build a wrapper that lets you select a grid type to test with
-        // Test easy sudoku
-        let sudoku = new Sudoku(SampleSudokus.EASY_SUDOKU);
-            
-        // Test pre-completed Sudoku
-        //sudoku = new Sudoku(SampleSudokus.COMPLETED_SUDOKU_GRID);
+    getPossibilities() {
+        // TODO: should possibilities just be caked into the Sudoku Class directly?  It seems that
+        // this would solve a lot of help access functions...
+        
+        // Initial possibilities (empty sudoku) are 1->9 in each grid location
+        let possibilities: Array<Array<number>> = new Array(this.gridSize).fill([1,2,3,4,5,6,7,8,9]);
 
-        // Test almost completed Sudoku, enter 1 into the 1st cell
-        //let almostCompleteSudoku = SampleSudokus.COMPLETED_SUDOKU_GRID.slice();
-        //almostCompleteSudoku[0] = null;
-        //sudoku = new Sudoku(almostCompleteSudoku);
-        // Use below: sudoku: new Sudoku(almostCompleteSudoku)
-        this.state = {
-            // Test easy sudoku
-            //sudoku: new Sudoku(SampleSudokus.EASY_SUDOKU)
-            // Test pre-completed Sudoku
-            //sudoku: new Sudoku(SampleSudokus.COMPLETED_SUDOKU_GRID)
-            sudoku: sudoku
-        }
-    }
+        // loop through each non-null value in the grid and remove possibilites
+        for(let i=0; i<this.gridSize; i++) {
+            const square = this.getEnrichedSquareDetails(i);
+            if(square.value !== null) {
+                // Reduce current square possibilities to its known value
+                possibilities[i] = [square.value];
 
-    /**
-     * Handler function to enable users to make entries into the sudoku
-     * @param box 
-     * @param boxSquareIndex 
-     * @param inputVal 
-     */
-    handleInput(box: number, boxSquareIndex: number, inputVal: string) {
-        // Update the sudoku with entry, "current" sudoku returned so react can detect and then render a state update
-        // Note: unless we update the state React will automatically clear any input entry to match its previous value
-        // TODO: this seems like the wrong way to go about this, look into later (setting state property to current value)
-        const globalSquareIndex = this.state.sudoku.getGlobalIndexOfBoxSquare(box, boxSquareIndex);
-        let updatedSudoku = this.state.sudoku.setSquare(globalSquareIndex, this.parseSudokuInput(inputVal))
-        this.setState({
-            sudoku: updatedSudoku,
-        });
-    }
+                // Remove row conflicts
+                // Get all indexes in the row
+                const rowIndexes = this.getGlobalIndexesInRow(square.row);
+                // Loop through each column in the row, but skip the column that has the known value
+                for(let col=0; col<rowIndexes.length; col++) {
+                    if(col !== square.col) {
+                        // Filter the known value out from being a possibility from other squares in the row
+                        possibilities[rowIndexes[col]] = possibilities[rowIndexes[col]].filter((val) => {
+                            return val !== square.value;
+                        });
+                    }
+                }
 
-    /**
-     * Parses Sudoku Square entries for consumpution.  If input can be parsed and is within range then the corresponding int
-     * value is returned.  If value is outside of range then last character is parsed (ie: user can type to replace a number without backspace).
-     * Returns null on empty value or when cannot be parsed via the preceeding stated logic.
-     * @param inputVal string enterred as input into a Sudoku Square
-     */
-    parseSudokuInput(inputVal: string): SudokuSquare {
-        // TODO: should this santizer be located directly in the wrapped sudoku class directly?
-        // Attempt to parse input directly
-        let parsedVal = parseInt(inputVal);
-        // If value cannot be parsed to a number then then treat as "null"
-        if(Number.isNaN(parsedVal)) {
-            return null;
-        }
-        // If parsed value is out of range then try to parse last enterred character
-        // Allows a user to replace an existing entry by just enterring a new one without hitting backspace
-        if(parsedVal < 1 || parsedVal > this.state.sudoku.baseSize) {
-            let reducedParsedVal = parseInt(inputVal.charAt(inputVal.length - 1));
-            // If last charcter cannot be parsed to int or is out of range then treat as "null"
-            if(Number.isNaN(reducedParsedVal) || reducedParsedVal > this.state.sudoku.baseSize) {
-                return null;
+                // Remove col conflicts
+                const colIndexes = this.getGlobalIndexesInColumn(square.col);
+                for(let row=0; row<colIndexes.length; row++) {
+                    if(row !== square.row) {
+                        possibilities[colIndexes[row]] = possibilities[colIndexes[row]].filter((val) => {
+                            return val !== square.value;
+                        });
+                    }
+                }
+
+                // Remove box conflicts
+                // TODO: refactor variable naming, enriched square details too
+                const boxIndexes = this.getGlobalIndexesInBox(square.boxIndex);
+                for(let x=0; x<boxIndexes.length; x++) {
+                    if(x !== square.localSquareIndexInBox) {
+                        possibilities[boxIndexes[x]] = possibilities[boxIndexes[x]].filter((val) => {
+                            return val !== square.value;
+                        });
+                    }
+                }
+
+                // TODO: when any of these actions reduces a possiblity Array to zero we can set the square value
+                // and recurse.  Something to think about (individual possibily reducer?)
+                // This may need to be its own class all together.
             }
-            // Successfull parse of last character
-            return reducedParsedVal;
-        } 
-        // Successful parse of inputVal
-        return parsedVal;
-    }
+        }
 
-    /**
-     * Render a full sudoku board.  For a standard 9x9 sudoku this would yield 9 sudoku boxes in a 3x3 grid 
-     * where each box contains its own 3x3 grid of squares
-     */
-    render() {
-        const boxData = this.state.sudoku.getBoxes();
-        const boxRows: JSX.Element[] = [];
-        const rootSize = this.state.sudoku.rootSize;
-        const conflictLocations = this.state.sudoku.calculateConflicts();
-        // Each sudoku contains X rows with X "Sudoku Boxes" in each.
-        for(let boxRow=0; boxRow<rootSize; boxRow++) {
-            const boxes: JSX.Element[] = [];
-            for(let boxCol=0; boxCol<rootSize; boxCol++) {
-                // Unique index for each box in the all up Sudoku.
-                const boxIndex = (boxRow * rootSize) + boxCol;
-                boxes.push(
-                    <SudokuBox 
-                        key={boxIndex} 
-                        squares={boxData[boxIndex]}
-                        rootSize={rootSize}
-                        // Input handler, passed down into underlying Sudoku Box + Square
-                        handleInput={(squareIndex, val) => {
-                            this.handleInput(boxIndex, squareIndex, val);
-                        }}
-                        providedLocations={this.state.sudoku.getLocalBoxProvidedLocations(boxIndex)}
-                        conflictLocations={this.state.sudoku.getLocalBoxConflictLocations(boxIndex, conflictLocations)}
-                    /> 
-                );
+        // After reducing possibilities, determine which cells that we have found a solution for
+        let solvableCells = [];
+        for(let i=0; i<possibilities.length; i++) {
+            if(possibilities[i].length == 1 && this.getSquare(i) === null) {
+                // console.log(`location ${i}, value ${possibilities[i][0]}`);
+                solvableCells.push({
+                    gridIndex: i,
+                    value: possibilities[i][0]
+                });
             }
-            boxRows.push(
-                <div key={boxRow} className="sudoku-grid-line">
-                    {boxes}
-                </div>
-            );
         }
-        const isSolved = this.state.sudoku.isSolved();
-        return (
-            <div>
-                <div className="sudoku">
-                    <div className="sudoku-board">
-                        {boxRows}
-                    </div>
-                </div>
-                <div className="sudoku-status">
-                    {isSolved ? "You have finished the sudoku!" : "Keep at it :)" }
-                </div>
-            </div>
-            
-        );
+
+        return {
+            possibilities: possibilities,
+            solvableSquares: solvableCells
+        };
     }
 }
 
 /**
- * React compontent for a Sudoku box.  For a standard 9x9 sudoku this would yield a 3x3 grid of sudoku squares/cells
- * @param props 
+ * Return the specified indexes from the generic grab bag
+ * Enables easy reuse of the row/col/box index helper functions when users managing a 2nd custom grid representation 
+ * @param bag grab bag of values to pull from
+ * @param indexes desired indexes to pull
+ * @returns array of values stored at the requested indexes
  */
-function SudokuBox(props: SudokuBoxProps) {
-    const rows: JSX.Element[] = [];
-    const rootSize = props.rootSize;
-    // Create X rows of sudokus cells. Standard sudoku boxes will have 3
-    for(let row=0; row<rootSize; row++) {
-        const squares: JSX.Element[] = [];
-        // Create X cols in each row. Standard sudoku boxes will have 3
-        for(let col=0; col<rootSize; col++) {
-            // localSquareIndex, unique for each square contained in the box. Standard sudoku will have 9 (3x3)
-            const localSquareIndex = (row*rootSize) + col;
-            squares.push(
-                <SudokuSquare 
-                    key={localSquareIndex}
-                    value={props.squares[localSquareIndex]} 
-                    isProvidedLocation={props.providedLocations.includes(localSquareIndex)}
-                    isConflictLocation={props.conflictLocations.includes(localSquareIndex)}
-                    // TODO: optimize by binding to a function callback instead of in-lining
-                    onInput={(val:any) => {
-                        props.handleInput(row*rootSize + col, val);
-                    }}
-                />
-            );
-        }
-        rows.push(
-            <div key={row} className="sudoku-box-line">
-                {squares}
-            </div>
-        );
+export function getIndexesfromBag<T>(bag: Array<T>, indexes: Array<number>): Array<T> {
+    let retIndexes: Array<T> = [];
+    for(let i=0; i<indexes.length; i++) {
+        retIndexes.push(bag[indexes[i]]);
     }
-    return (
-        <div className="sudoku-box">
-            {rows}
-        </div>
-    );
-}
-
-/**
- * React component for a single sudoku square inside a sudoku box.
- * "Provided" values get a special styling and are immutable. Non-provided locations allow for users to edit.
- * Enables special stylying for when the square is "in conflict" with another square in the global grid.
- * @param props 
- */
-function SudokuSquare(props: SudokuSquareProps) {
-    // TODO: Create additional type of "unfilled square" which can show which numbers are valid possibilities
-    // for the user to enter
-    // If square is a "Provided location" then it has special styling and user is not able to update its value
-    if(props.isProvidedLocation) {
-        return (
-            <input
-                className={`
-                    sudoku-square
-                    provided-square-location
-                    ${props.isConflictLocation ? 'conflict-square' : ''}
-                `}
-                value={props.value == null ? "" : props.value}
-                type="text"
-                disabled // User is not able to edit provided values
-            />
-        );
-    }
-    // Standard non-"provided location". Binds to callback function to allow for users to submit values + edit
-    return (
-        <input
-            className={`
-                sudoku-square
-                ${props.isConflictLocation ? 'conflict-square' : ''}
-            `}
-            value={props.value == null ? "" : props.value}
-            // Note: using "text" instead of "number" for net styling purposes
-            type="text"
-            // TODO: update handler to use function reference instead of in-line. https://reactjs.org/docs/handling-events.html
-            onChange={(e) => {
-                props.onInput(e.target.value);
-            }}
-        />
-    );
+    return retIndexes;
 }

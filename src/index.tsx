@@ -1,13 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import { SudokuUI } from './Components/Sudoku/Sudoku';
+import App from './Components/Layout/Layout';
+import { SudokuUI } from './Components/Sudoku/SudokuUI';
 import { TicTacToe } from './Components/TicTacToe/TicTacToe';
 import * as serviceWorker from './serviceWorker';
 
 ReactDOM.render(
   <React.StrictMode>
-    <SudokuUI />
+    <App />
+    { /* <SudokuUI /> */ }
     { /* <TicTacToe /> */ }
     { /* <Sudoku /> */ }
   </React.StrictMode>,

@@ -25,6 +25,19 @@ export const EASY_SUDOKU: SudokuSection = [
     null, null, 9, null, null, null, 2, 8, null,
 ];
 
+// https://sudoku.com/hard/
+export const HARD_SUDOKU: SudokuSection = [
+    null, null, 3, null, null, null, 1, 6, 9,
+    1, 2, null, null, null, null, 7, null,null,
+    null, 4, null, null, null, 5, null, null, null,
+    null, 5, null, null, 2, null, 9, null, null,
+    null, null, null, null, null, 3, null, 7, null,
+    2, null, null, 5, 9, 4, null, null, null, 
+    8,null, null, null, 3, 6, null, null, null, 
+    null, null, 4, null, null, null, 5, null, null, 
+    6, null, null, null, null, null, null, 8, null,
+];
+
 /**
  * Generation logic
  * Line 1: 1->9

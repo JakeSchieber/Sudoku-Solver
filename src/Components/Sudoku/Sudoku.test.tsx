@@ -36,12 +36,28 @@ describe('Sudoku', () => {
     describe('Instantiation', () => {
         const sudokuGridSize = 9*9;
         test('Create Sudkou + basic square access', () => {
-            expect(new Sudoku(new Array(sudokuGridSize).fill(null)).getSquareAtGlobalColAndRow(0, 0)).toBe(null);
+            expect(new Sudoku(new Array(sudokuGridSize).fill(null)).getSquare(0)).toBe(null);
         });
         test('Fails to instantiate with incorrect sized input grid', ()=> {
             expect(() => {new Sudoku(new Array(sudokuGridSize + 1).fill(null))}).toThrowError();
             expect(() => {new Sudoku(new Array(sudokuGridSize - 1).fill(null))}).toThrowError();
         });
+
+        test('Instantiation, with provided locations', () => {
+            // Valid empty
+            let emptyGrid = new Array(sudokuGridSize).fill(null);
+            expect(new Sudoku(emptyGrid, []).getSquare(0)).toBe(null);
+            
+            // Valid non-empty
+            let nonEmpty = new Array(sudokuGridSize).fill(null);
+            nonEmpty[0] = 1;
+            expect(new Sudoku(nonEmpty, [0]).getSquare(0)).toBe(1);
+
+            // Invalid, provided location not specified
+            expect(() => {new Sudoku(emptyGrid, [0])}).toThrowError();
+            
+            // TODO: Add tests for setting a sudoku entry and also error on provided locations
+        })
     })
     describe('Has conflicts', () => {
         test('Detects no conflicts', () => {
@@ -237,36 +253,42 @@ describe('Sudoku', () => {
         test('Returns expected values', () => {
             // TODO: converted existing getBox functions, build out tests for the other 2 properities returned
             // Can join in with some of the converted tests below as well.
-            expect(sudoku.getEnrichedSquareDetails(0, 0).boxIndex).toEqual(0);
-            expect(sudoku.getEnrichedSquareDetails(2, 2).boxIndex).toEqual(0);
-            expect(sudoku.getEnrichedSquareDetails(3, 3).boxIndex).toEqual(4);
-            expect(sudoku.getEnrichedSquareDetails(5, 5).boxIndex).toEqual(4);
-            expect(sudoku.getEnrichedSquareDetails(6, 6).boxIndex).toEqual(8);
-            expect(sudoku.getEnrichedSquareDetails(8, 8).boxIndex).toEqual(8);
+            let globalIndex = sudoku.getGlobalIndexFromRowAndColumn(0, 0);
+            expect(sudoku.getEnrichedSquareDetails(globalIndex).boxIndex).toEqual(0);
+            globalIndex = sudoku.getGlobalIndexFromRowAndColumn(2, 2);
+            expect(sudoku.getEnrichedSquareDetails(globalIndex).boxIndex).toEqual(0);
+            globalIndex = sudoku.getGlobalIndexFromRowAndColumn(3, 3);
+            expect(sudoku.getEnrichedSquareDetails(globalIndex).boxIndex).toEqual(4);
+            globalIndex = sudoku.getGlobalIndexFromRowAndColumn(5, 5);
+            expect(sudoku.getEnrichedSquareDetails(globalIndex).boxIndex).toEqual(4);
+            globalIndex = sudoku.getGlobalIndexFromRowAndColumn(6, 6);
+            expect(sudoku.getEnrichedSquareDetails(globalIndex).boxIndex).toEqual(8);
+            globalIndex = sudoku.getGlobalIndexFromRowAndColumn(8, 8);
+            expect(sudoku.getEnrichedSquareDetails(globalIndex).boxIndex).toEqual(8);
         });
+        // TODO move these to more generic "getEnrichedSquareDetails", ie: not including error in below,
+        // Join togther into 1 big group?
         test('Throws expected errors', () => {
-            expect(() => {sudoku.getEnrichedSquareDetails(-1, 0)}).toThrowError();
-            expect(() => {sudoku.getEnrichedSquareDetails(9, 0)}).toThrowError();
-            expect(() => {sudoku.getEnrichedSquareDetails(0, -1)}).toThrowError();
-            expect(() => {sudoku.getEnrichedSquareDetails(0, 9)}).toThrowError();
+            expect(() => {sudoku.getEnrichedSquareDetails(-1)}).toThrowError();
+            expect(() => {sudoku.getEnrichedSquareDetails(81)}).toThrowError();
         });
     });
 
     describe('Get index of square inside of box', () => {
         let sudoku = new Sudoku(GOOD_SUDOKU_GRID);
         test('Returns expected values', () => {
-            expect(sudoku.getEnrichedSquareDetails(0, 0).localSquareIndexInBox).toEqual(0);
-            expect(sudoku.getEnrichedSquareDetails(1, 1).localSquareIndexInBox).toEqual(4);
-            expect(sudoku.getEnrichedSquareDetails(2, 2).localSquareIndexInBox).toEqual(8);
-            expect(sudoku.getEnrichedSquareDetails(6, 6).localSquareIndexInBox).toEqual(0);
-            expect(sudoku.getEnrichedSquareDetails(7, 7).localSquareIndexInBox).toEqual(4);
-            expect(sudoku.getEnrichedSquareDetails(8, 8).localSquareIndexInBox).toEqual(8);
-        });
-        test('Throws expected errors', () => {
-            expect(() => {sudoku.getEnrichedSquareDetails(-1, 0)}).toThrowError();
-            expect(() => {sudoku.getEnrichedSquareDetails(9, 0)}).toThrowError();
-            expect(() => {sudoku.getEnrichedSquareDetails(0, -1)}).toThrowError();
-            expect(() => {sudoku.getEnrichedSquareDetails(0, 9)}).toThrowError();
+            let globalIndex = sudoku.getGlobalIndexFromRowAndColumn(0, 0);
+            expect(sudoku.getEnrichedSquareDetails(globalIndex).localSquareIndexInBox).toEqual(0);
+            globalIndex = sudoku.getGlobalIndexFromRowAndColumn(1, 1);
+            expect(sudoku.getEnrichedSquareDetails(globalIndex).localSquareIndexInBox).toEqual(4);
+            globalIndex = sudoku.getGlobalIndexFromRowAndColumn(2, 2);
+            expect(sudoku.getEnrichedSquareDetails(globalIndex).localSquareIndexInBox).toEqual(8);
+            globalIndex = sudoku.getGlobalIndexFromRowAndColumn(6, 6);
+            expect(sudoku.getEnrichedSquareDetails(globalIndex).localSquareIndexInBox).toEqual(0);
+            globalIndex = sudoku.getGlobalIndexFromRowAndColumn(7, 7);
+            expect(sudoku.getEnrichedSquareDetails(globalIndex).localSquareIndexInBox).toEqual(4);
+            globalIndex = sudoku.getGlobalIndexFromRowAndColumn(8, 8);
+            expect(sudoku.getEnrichedSquareDetails(globalIndex).localSquareIndexInBox).toEqual(8);
         });
     });
 
