@@ -14,6 +14,7 @@ import { PrimaryButton, CompoundButton, Button } from '@fluentui/react';
 import { Nav, INavLink, INavStyles, INavLinkGroup } from 'office-ui-fabric-react/lib/Nav';
 import { SudokuUI } from './../Sudoku/SudokuUI';
 import './Layout.css';
+import {ReduxSandbox} from './../ReduxSandbox/ReduxSandbox';
 
 interface AppState {
     isOpen: boolean;
@@ -111,6 +112,7 @@ export default class App extends React.Component<{}, AppState> {
                         <div className="content">
                             <Route path="/" exact component={SudokuUI} />
                             <Route path="/page/:id" component={SamplePage} />
+                            <Route path="/ReduxSandbox" component={ReduxSandbox} />
                         </div>
                     </div>
                 </div>
