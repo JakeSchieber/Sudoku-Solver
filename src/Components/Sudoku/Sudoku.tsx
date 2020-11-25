@@ -513,7 +513,7 @@ export class Sudoku {
         // After reducing possibilities, determine which cells that we have found a solution for
         let solvableCells = [];
         for(let i=0; i<possibilities.length; i++) {
-            if(possibilities[i].length == 1 && this.getSquare(i) === null) {
+            if(possibilities[i].length === 1 && this.getSquare(i) === null) {
                 // console.log(`location ${i}, value ${possibilities[i][0]}`);
                 solvableCells.push({
                     gridIndex: i,

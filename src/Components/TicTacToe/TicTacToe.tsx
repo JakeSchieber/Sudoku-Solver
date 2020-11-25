@@ -239,7 +239,7 @@ export class TicTacToe extends React.Component<{}, TicTacToeState> {
     let matchFailure = false;
     if (winner) {
       status = 'Winner: ' + winner;
-    } else if (this.state.stepNumber == 9) {
+    } else if (this.state.stepNumber === 9) {
       status = "WINNER: NONE... the only winning move is not to play.";
       matchFailure = true;
     } else {

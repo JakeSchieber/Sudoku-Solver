@@ -1,23 +1,18 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
+import * as serviceWorker from './serviceWorker';
+import { BrowserRouter } from "react-router-dom";
+import App from './Components/App';
 import store from './configureStore';
 import './index.css';
-import App from './Components/Layout/Layout';
-import { SudokuUI } from './Components/Sudoku/SudokuUI';
-import { TicTacToe } from './Components/TicTacToe/TicTacToe';
-import * as serviceWorker from './serviceWorker';
-
-// TODO: add preloaded state
-//const store = configureStore();
 
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={store}>
-      <App />
-      { /* <SudokuUI /> */ }
-      { /* <TicTacToe /> */ }
-      { /* <Sudoku /> */ }
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </Provider>
   </React.StrictMode>,
   document.getElementById('root')

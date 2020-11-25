@@ -10,17 +10,22 @@ const store = configureStore({
         user: userReducer
     }
 })
-export default store;
 
 export type RootState = ReturnType<typeof store.getState>;
 
-// TODO: play around with action dispatch by hand
-// store.subscribe(() => console.log(store.getState()))
-// store.dispatch({ type: 'INCREMENT' })
-// store.dispatch({ type: 'INCREMENT' })
-// store.dispatch({ type: 'DECREMENT' })
+export default store;
 
 /*
+// TODO: add support for hot reloading while in dev environment
+https://redux-toolkit.js.org/tutorials/advanced-tutorial
+Also: https://redux.js.org/recipes/configuring-your-store
+if (process.env.NODE_ENV === 'development' && module.hot) {
+    module.hot.accept('./rootReducer', () => {
+        const newRootReducer = require('./rootReducer').default
+        store.replaceReducer(newRootReducer)
+    })
+}
+
 // Example of stock boiler plate without using configureStore from redux toolkit
 export default function configureStore(preloadedState: any) {
     const middlewares: any = [];
@@ -33,11 +38,6 @@ export default function configureStore(preloadedState: any) {
 
     const store = createStore(rootReducer, preloadedState, composedEnhancers);
 
-    // TODO: look into default configure store function
-
-    // TODO: add support for hot reloading while in dev environment
-    // https://redux.js.org/recipes/configuring-your-store
-    
     return store;
 }
 */

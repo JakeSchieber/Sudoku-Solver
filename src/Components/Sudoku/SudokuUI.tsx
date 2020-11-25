@@ -6,7 +6,7 @@ import {
     getIndexesfromBag 
 } from './Sudoku';
 import './Sudoku.css';
-import * as SampleSudokus from './SampleSudokus';
+//import * as SampleSudokus from './SampleSudokus';
 import { PrimaryButton } from '@fluentui/react';
 
 // Sudoku UI, uses Sudoku class for all logic and to pull in it's state/props
@@ -64,7 +64,7 @@ export class SudokuUI extends React.Component<{}, SudokuUIState> {
         let sudokuGridCharArray = sudokuGridString.split('');
         let sudokuGrid: Array<SudokuSquareValue> = [];
         for(let i=0; i<sudokuGridCharArray.length; i++) {
-            if(sudokuGridCharArray[i] == "0") {
+            if(sudokuGridCharArray[i] === "0") {
                 sudokuGrid.push(null);
             } else {
                 sudokuGrid.push(parseInt(sudokuGridCharArray[i]))
@@ -312,21 +312,23 @@ function SudokuSquare(props: SudokuSquareProps) {
             sudoku-square
             sudoku-square-possibilities
         `}>
-            <tr>
-                <td>{props.possibilities.includes(1) ? 1 : ""}</td>
-                <td>{props.possibilities.includes(2) ? 2 : ""}</td>
-                <td>{props.possibilities.includes(3) ? 3 : ""}</td>
-            </tr>
-            <tr>
-                <td>{props.possibilities.includes(4) ? 4 : ""}</td>
-                <td>{props.possibilities.includes(5) ? 5 : ""}</td>
-                <td>{props.possibilities.includes(6) ? 6 : ""}</td>
-            </tr>
-            <tr>
-                <td>{props.possibilities.includes(7) ? 7 : ""}</td>
-                <td>{props.possibilities.includes(8) ? 8 : ""}</td>
-                <td>{props.possibilities.includes(9) ? 9 : ""}</td>
-            </tr>
+            <tbody>
+                <tr>
+                    <td>{props.possibilities.includes(1) ? 1 : ""}</td>
+                    <td>{props.possibilities.includes(2) ? 2 : ""}</td>
+                    <td>{props.possibilities.includes(3) ? 3 : ""}</td>
+                </tr>
+                <tr>
+                    <td>{props.possibilities.includes(4) ? 4 : ""}</td>
+                    <td>{props.possibilities.includes(5) ? 5 : ""}</td>
+                    <td>{props.possibilities.includes(6) ? 6 : ""}</td>
+                </tr>
+                <tr>
+                    <td>{props.possibilities.includes(7) ? 7 : ""}</td>
+                    <td>{props.possibilities.includes(8) ? 8 : ""}</td>
+                    <td>{props.possibilities.includes(9) ? 9 : ""}</td>
+                </tr>
+            </tbody>
         </table> 
     );
 

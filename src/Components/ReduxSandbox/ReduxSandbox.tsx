@@ -7,6 +7,9 @@ import {
     selectName,
     selectNameAndCount
 } from './../../reducers'
+import { Stack, CompoundButton, IStackTokens } from '@fluentui/react';
+
+const stackTokens: IStackTokens = { childrenGap: 40 };
 
 export function ReduxSandbox() {
     // Pull in selectors and connect to store
@@ -17,35 +20,69 @@ export function ReduxSandbox() {
 
     // State: initializes a state for "counter" in component, the function to update it is mapped
     // to setCounter, initalized to state of 0
-    const [counter, setCounter] = useState(2);
+    const [addAmount, setAddAmount] = useState(2);
 
     // Action: code that is called when an update to state is needed, references the state
     // update function called above, is passed the old state which we name as prevCounter
     // and then updates to +1
-    const incrementAdd = () => {
-        setCounter(prevCounter => prevCounter + 1);
+    const incrementAddAmount = () => {
+        setAddAmount(addAmount => addAmount + 1);
+    }
+    const decrementAddAmount = () => {
+        setAddAmount(addAmount => addAmount - 1);
     }
 
     // View: the UI definition based on current state
     // details current state and maps onClick to our action handler
-    //
     return (
         <React.Fragment>
+            <h3>Current redux state:</h3>
             <div>
-                Current value: {count}
+                Name: {name}
             </div>
             <div>
-                Increment: <button onClick={() => dispatch(increment())}>Do it!</button>
+                 Counter value: {count}
             </div>
             <div>
-                Increment by {counter}: <button onClick={() => dispatch(increaseByAmount(counter))}>Do it!</button>
+                 Concatenate with selector: '{nameAndCount}'
             </div>
-            <div>
-                name: {name}
-            </div>
-            <div>
-                nameAndCount: {nameAndCount}
-            </div>
+
+            <h3>Set amount to add:</h3>
+            <div>Current "Amount to Add" (from local state): {addAmount}</div>
+
+            <Stack horizontal tokens={stackTokens}>
+                <CompoundButton 
+                    secondaryText={`Increase incrementor by 1`}
+                    primary
+                    onClick={ incrementAddAmount }
+                > 
+                    Increment
+                </CompoundButton>
+                <CompoundButton 
+                    secondaryText="Decrease incrementor by 1"
+                    onClick={ decrementAddAmount }
+                > 
+                    Decrement
+                </CompoundButton>
+            </Stack>
+
+            <h3>Increase counter by:</h3>
+            <Stack horizontal tokens={stackTokens}>
+                <CompoundButton 
+                    secondaryText={`Change by ${addAmount}`} 
+                    primary
+                    onClick={() => dispatch(increaseByAmount(addAmount))}
+                >
+                    The current 'Add amount'
+                </CompoundButton>
+                <CompoundButton 
+                    secondaryText="Just increment by 1"
+                    onClick={() => dispatch(increment())}
+                > 
+                    +1
+                </CompoundButton>
+            </Stack>
+
         </React.Fragment>
     )
 }

@@ -1,4 +1,3 @@
-import { combineReducers } from 'redux';
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { RootState } from './configureStore';
 
