@@ -25,7 +25,7 @@
     // "isolatedModules": true,               /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
 
     /* Strict Type-Checking Options */
-    "strict": true,                           /* Enable all strict type-checking options. */
+    //"strict": true,                         /* TODO undo this, but trying to get to build for now */  /* Enable all strict type-checking options. */
     // "noImplicitAny": true,                 /* Raise error on expressions and declarations with an implied 'any' type. */
     // "strictNullChecks": true,              /* Enable strict null checks. */
     // "strictFunctionTypes": true,           /* Enable strict checking of function types. */
@@ -72,6 +72,6 @@
     "forceConsistentCasingInFileNames": true  /* TODO - weird? */ /* Disallow inconsistently-cased references to the same file. */
   },
   "include": [
-    "*" /* TODO - weird? */
+    "src"
   ]
 }

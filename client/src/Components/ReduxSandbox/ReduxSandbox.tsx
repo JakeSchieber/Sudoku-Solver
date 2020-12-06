@@ -7,7 +7,7 @@ import {
     selectName,
     selectNameAndCount
 } from './../../reducers'
-import { Stack, CompoundButton, IStackTokens } from '@fluentui/react';
+import { Stack, CompoundButton, IStackTokens, PrimaryButton } from '@fluentui/react';
 
 const stackTokens: IStackTokens = { childrenGap: 40 };
 
@@ -30,6 +30,17 @@ export function ReduxSandbox() {
     }
     const decrementAddAmount = () => {
         setAddAmount(addAmount => addAmount - 1);
+    }
+
+    // Make a test API call
+    const makeTestApiCall = () => {
+        fetch('/api/test')
+            .then(res => res.json())
+            .then(data => {
+                console.log(data);
+                console.log(data.value);
+            })
+            .catch(err => console.log(err));
     }
 
     // View: the UI definition based on current state
@@ -82,6 +93,13 @@ export function ReduxSandbox() {
                     +1
                 </CompoundButton>
             </Stack>
+
+            <h3>Temp: Server test</h3>
+            <PrimaryButton 
+                onClick={ makeTestApiCall }
+            > 
+                Make test call to server
+            </PrimaryButton>
 
         </React.Fragment>
     )
